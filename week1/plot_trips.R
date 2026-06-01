@@ -10,15 +10,20 @@ library(scales)
 theme_set(theme_bw())
 
 # load RData file output by load_trips.R
-load('trips.RData')
+load("trips.RData")
 
 ########################################
 # plot trip data
 ########################################
 
 # plot the distribution of trip times across all rides (compare a histogram vs. a density plot)
-ggplot(trips, aes(x=tripduration)) + scale_x_log10(label=comma) + scale_y_log10(label=comma) + geom_histogram(bins=10)
-ggplot(trips, aes(x=tripduration)) + scale_x_log10(label=comma) + geom_density()
+ggplot(trips, aes(x=tripduration)) +
+    scale_x_log10(label=comma) +
+    geom_histogram(bins=30)
+
+ggplot(trips, aes(x=tripduration)) +
+    scale_x_log10(label=comma) +
+    geom_density()
 
 # plot the distribution of trip times by rider type indicated using color and fill (compare a histogram vs. a density plot)
 # user type
@@ -27,14 +32,11 @@ ggplot(trips, aes(x=tripduration, color=usertype)) + scale_x_log10(label=comma) 
 
 # plot the total number of trips on each day in the dataset
 # envisioning x axis being the day, and the count/num of trips being the y axis
-# trips1 df from citibike.R seperates out the ymd
-ggplot(trips1, aes(x=ymd)) + geom_histogram(bins=28)
-# looks weird, come back to it
+ggplot(trips, aes(x=ymd)) + geom_histogram(bins=28)
 
 # plot the total number of trips (on the y axis) by age (on the x axis) and gender (indicated with color)
 # get age from 2014-birth_year
 ggplot(trips, aes(x=birth_year, color=gender)) + geom_line()
-#FOR TODAYS WORK, GEOMPOINT, GEOMLINE, HISTOGRAM, DENSITY PLOT
 
 # plot the ratio of male to female trips (on the y axis) by age (on the x axis)
 # hint: use the pivot_wider() function to reshape things to make it easier to compute this ratio

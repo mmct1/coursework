@@ -56,9 +56,12 @@ ggplot(trips, aes(x=(2014-birth_year), color=gender, fill=gender)) +
 trips %>%
     mutate(age=2014-birth_year) %>%
     filter(gender != "Unknown") %>%
-    group_by(gender,age) %>%
+    group_by(age,gender) %>%
     summarize(count = n()) %>%
-    pivot_wider()
+    pivot_wider(names_from=gender, values_from=count) %>%
+    mutate(ratio=Male/Female) %>%
+    ggplot(aes(x=age,y=ratio)) +
+        geom_line()
 
 
 ########################################
@@ -71,6 +74,12 @@ ggplot(weather, aes(x=ymd, y=tmin)) +
 # plot the minimum temperature and maximum temperature (on the y axis, with different colors) over each day (on the x axis)
 # hint: try using the pivot_longer() function for this to reshape things before plotting
 # (you can skip this and come back to it tomorrow if we haven't covered reshaping data yet)
+# geom_point with color denoting min, max
+# x-axis is the day, y is the min temp, y is the max temp
+weather %>%
+    pivot_longer(names_to="max_or_min", values_to="temp", 5:6) %>%
+    ggplot(aes(x=date, y=temp, color=max_or_min, group=max_or_min)) +
+        geom_line()
 
 ########################################
 # plot trip and weather data

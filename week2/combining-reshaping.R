@@ -46,7 +46,7 @@ stocks %>%
 
 # pivot_longer() has a names_ptypes argument, e.g.  names_ptypes = list(year = double()). 
 # What does it do? Add your answer as a comment.
-# It changes the variable type, seems like it casts the variable as a chosen type to 
+# It changes the variable type/casts the variable as a chosen type to 
 # ensure type consistency between pivots.
 
 ####################################################################################

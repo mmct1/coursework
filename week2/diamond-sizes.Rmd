@@ -30,7 +30,7 @@ smaller %>%
 27.3.1 Exercise 3
 ---
 ---
-The majority of diamonds sampled are smaller than 1.5 carats. As carats increase, the count of diamonds decreases.
+The majority of diamonds sampled are smaller than 1.5 carat. As size increases, the count of diamonds decreases.
 ---
 
 ---
@@ -42,24 +42,40 @@ How diamond sizes vary by cut, colour, and clarity.
 
 ```{r}
 smaller %>% 
-  group_by(cut) %>%
-  ggplot(aes(x=carat)) + 
-    geom_histogram(bins=30) +
-    facet_wrap(~cut)
+  ggplot(aes(x=carat, color=cut)) + 
+    geom_freqpoly(binwidth = 0.01) +
+    facet_wrap(~cut) +
+    labs(x="Carat",y="Count",title="How Diamond Sizes Vary by Cut")
+
+smaller %>%
+  ggplot(aes(x=carat, y=cut, color=cut, fill=cut)) +
+    geom_violin() +
+    labs(x="Carat",y="Cut",title="Comparing Distribution of Diamond Size by Cut")
+
 ```
 
 ```{r}
 smaller %>% 
-  group_by(color) %>%
-  ggplot(aes(x=carat)) + 
-    geom_histogram(bins=30) +
-    facet_wrap(~color)
+  ggplot(aes(x=carat, color=color)) + 
+    geom_freqpoly(binwidth = 0.01) +
+    facet_wrap(~color) +
+    labs(x="Carat",y="Count",title="How Diamond Sizes Vary by Color")
+
+smaller %>%
+  ggplot(aes(x=carat, y=color, color=color, fill=color)) +
+    geom_violin() +
+    labs(x="Carat",y="Color",title="Comparing Distribution of Diamond Size by Color")
 ```
 
 ```{r}
 smaller %>% 
-  group_by(clarity) %>%
-  ggplot(aes(x=carat)) + 
-    geom_histogram(bins=30) +
-    facet_wrap(~clarity)
+  ggplot(aes(x=carat, color=clarity)) + 
+    geom_freqpoly(binwidth = 0.01) +
+    facet_wrap(~clarity) +
+    labs(x="Carat",y="Count",title="How Diamond Sizes Vary by Clarity")
+
+smaller %>%
+  ggplot(aes(x=carat, y=clarity, color=clarity, fill=clarity)) +
+    geom_violin() +
+    labs(x="Carat",y="Clarity",title="Comparing Distribution of Diamond Size by Clarity")
 ```

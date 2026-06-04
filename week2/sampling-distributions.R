@@ -152,6 +152,10 @@ sample_mean <- mean(X_bar)
 sample_mean
 # gives values close to population mean
 
+sample_means <- replicate(100000, mean(sample(pop2$bmi, size = N)))
+mean(sample_means)
+#better solution
+
 # 4. Compute the standard deviation of the sampling distribution for the
 #    sample average of the variable.
 standard_error <- sd(X_bar)

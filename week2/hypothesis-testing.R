@@ -130,15 +130,36 @@ ex2 <- read_csv("http://pluto.huji.ac.il/~msby/StatThink/Datasets/ex2.csv")
 
 # 1. Compute the proportion in the sample of those with a high level of blood
 #    pressure.
+samp_n <- nrow(ex2) #150
+samp_proportion_high <- mean(ex2$group=="HIGH")
+samp_proportion_high
+# 0.2466667
+
 # 2. Compute the proportion in the population of those with a high level of
 #    blood pressure.
+pop_n <- nrow(pop2) #100000
+pop_proportion_high <-mean(pop2$group=="HIGH")
+pop_proportion_high
+# 0.28126
+
 # 3. Simulate the sampling distribution of the sample proportion and compute
 #    its expectation.
+p0_hat <- replicate(100000,mean(sample(pop2$group, size=samp_n)=="HIGH"))
+mean(p0_hat)
+# 0.2812802
+
 # 4. Compute the variance of the sample proportion.
+var(p0_hat)
+# 0.001337806
+
 # 5. It is proposed in Section 10.5 that the variance of the sample proportion
 #    is Var(P_hat) = p(1 - p)/n, where p is the probability of the event (having
 #    a high blood pressure in our case) and n is the sample size (n = 150 in our
 #    case). Examine this proposal in the current setting.
+# approximately .28(.72)/150 = 0.001344, very close to the computed variance
+p <- mean(pop2$group=="HIGH")
+var <- p*(1-p)/samp_n
+var
 
 ####################################################################################
 # ISRS Exercise 2.2 - Heart transplants, Part II
@@ -158,30 +179,40 @@ ex2 <- read_csv("http://pluto.huji.ac.il/~msby/StatThink/Datasets/ex2.csv")
 #          ---------------------------------------
 #                Total      34       69      103
 #          ---------------------------------------
-#
+
 # (a) What proportion of patients in the treatment group and what proportion
 #     of patients in the control group died?
+treatment_group <- 45/69 #0.6521739
+control_group <- 30/34 # 0.8823529
+
 # (b) One approach for investigating whether or not the treatment is effective
 #     is to use a randomization technique.
 #     i. What are the claims being tested? Use the same null and alternative
 #          hypothesis notation used in the section.
+#   H_0: Heart transplant does not have an affect on death rate
+#   H_A: Heart transplant does have an affect on death rate
+
 #     ii. The paragraph below describes the set up for such approach, if we were
 #     to do it without using statistical software. Fill in the blanks with a
 #     number or phrase, whichever is appropriate. 
-#          We write alive on _______ cards representing patients who were
-#          alive at the end of the study, and dead on ______ cards representing
+#          We write alive on ___28____ cards representing patients who were
+#          alive at the end of the study, and dead on ___75___ cards representing
 #          patients who were not. Then, we shuffle these cards and split them
-#          into two groups: one group of size _______ representing treatment, and
-#          another group of size _________ representing control. We calculate the
+#          into two groups: one group of size ____69___ representing treatment, and
+#          another group of size _____34____ representing control. We calculate the
 #          difference between the proportion of dead cards in the treatment and
 #          control groups (treatment - control) and record this value. We repeat
-#          this many times to build a distribution centered at ________. Lastly, we
+#          this many times to build a distribution centered at ___0 (no difference)____. Lastly, we
 #          calculate the fraction of simulations where the simulated differences
-#          in proportions are _________. If this fraction is low, we conclude that it is
+#          in proportions are ___p_hat(treatment)-p_hat(control)______. If this fraction is low, we conclude that it is
 #          unlikely to have observed such an outcome by chance and that the null
 #          hypothesis should be rejected in favor of the alternative.
+
+
 #     iii. What do the simulation results suggest about the effectiveness of
 #          the transplant program? (See textbook for figure.)
+# The figure is centered slightly off of zero, so it seems to indicate that the transplant program 
+# is at least somewhat effective
 
 ####################################################################################
 # ISRS Exercise 2.6 
@@ -216,10 +247,19 @@ ex2 <- read_csv("http://pluto.huji.ac.il/~msby/StatThink/Datasets/ex2.csv")
 # histogram shows the distribution of the simulated differences.
 #
 # (a) What are the hypotheses?
+# H_0: Other person yawning has no impact on if you yawn
+# H_A: Other person yawning does have an impact on if you yawn
+
 # (b) Calculate the observed difference between the yawning rates under the
 #     two scenarios.
+# control: 10/34 = 0.29412
+# treatment: 4/16 = 0.25
+# 0.25-0.29412 = -0.04412
+
 # (c) Estimate the p-value using the figure and determine the conclusion of
 #     the hypothesis test.
+# It looks like the p-value is around 50%, which is not sufficient for 
+# rejecting the null hypothese
 
 ####################################################################################
 # IST Exercise 9.2 
@@ -245,5 +285,36 @@ ex2 <- read_csv("http://pluto.huji.ac.il/~msby/StatThink/Datasets/ex2.csv")
 #    measurements is Normal and there are 29 patients in the first group and 21
 #    in the second. Find the interval that contains 95% of the sampling
 #    distribution of the statistic.
+mu1 <- 3.5
+mu2 <- 3.5
+sig1 <- 3  # active magnet
+sig2 <- 1.5 # placebo
+n1 <- 29
+n2 <- 21
+#.975-.025
+
+test_stat <- rep(0,100000)
+for(i in 1:100000){
+    x1 <- rnorm(n1,mu1,sig1)
+    x1_bar <- mean(x1)
+    x1_var <- var(x1)
+
+    x2 <- rnorm(n2,mu2,sig2)
+    x2_bar <- mean(x2)
+    x2_var <- var(x2)
+
+    test_stat[i] <- (x1_bar-x2_bar)/sqrt(x1_var/n1 + x2_var/n2)
+}
+
+quantile(test_stat, c(0.025,0.975))
+
+
 # 2. Does the observed value of T (computed from the "magnets" data) fall
 #    inside or outside the interval computed in 1?
+# doing the same test from prev question on magnets dataset
+x1_bar <- mean(magnets$change[1:29])
+x1_var <- var(magnets$change[1:29])
+x2_bar <- mean(magnets$change[30:50])
+x2_var <- mean(magnets$change[30:50])
+(x1_bar-x2_bar)/sqrt(x1_var/n1 + x2_var/n2)
+# doesn't fall in the interval

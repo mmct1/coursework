@@ -26,9 +26,18 @@ magnets <- read_csv("http://pluto.huji.ac.il/~msby/StatThink/Datasets/magnets.cs
 #   expected value of X, the null hypothesis and the alternative hypothesis
 #   for a statistical test to determine the presence of a placebo effect. The null
 #   hypothesis should reflect the situation that the placebo effect is absent
+# X = score pain before treatment - score pain after treatment (for inactive placebo, represented by magnets$change[30:50])
+# H_0: E(X) = 0  (basically patients wouldn't report a change in pain score)
+# H_A: E(X) not equal 0 (corresponds to patient reporting more/less pain)
+
 # 2. Identify the observations that can be used in order to test the hypotheses.
+# the change in pain scores reported by the control group, magnets$change[30:50]
+
 # 3. Carry out the test and report your conclusion. (Use a significance level of
 #    5%.)
+t.test(magnets$change[30:50]) #mu already set to zero, already two sided
+# p-value=0.004702 < 0.05, so reject the null
+# it is likely that there is a placebo effect
 
 ####################################################################################
 # IST Chapter 13, Exercise 13.1
@@ -50,6 +59,8 @@ magnets <- read_csv("http://pluto.huji.ac.il/~msby/StatThink/Datasets/magnets.cs
 # All tests should conducted at the 5% significance level:
 # 1. Is there a significance difference between the treatment and the control
 #    groups in the expectation of the reported score of pain before the application of the device?
+# H_0: 
+
 # 2. Is there a significance difference between the treatment and the control
 #    groups in the variance of the reported score of pain before the application
 #    of the device?

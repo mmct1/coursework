@@ -7,19 +7,59 @@ magnets <- read_csv("http://pluto.huji.ac.il/~msby/StatThink/Datasets/magnets.cs
 # 1. What is the sample average of the change in score between the
 #    patient's rating before the application of the device and the
 #    rating after the application?
+mean(magnets$change) #3.5
+
 # 2. Is the variable "active" a factor or a numeric variable?
+# Factor - there are only 2 unique values (1 and 2)
+# But is.factor(magnets$active) returns FALSE?
+
 # 3. Compute the average value of the variable "change" for the patients that
 #    received an active magnet and average value for those that received an
 #    inactive placebo. (Hint: Notice that the first 29 patients received an
 #    active magnet and the last 21 patients received an inactive placebo. The
 #    subsequence of the first 29 values can be obtained via "change[1:29]" and
 #    the last 21 values via "change[30:50]".)
+mean(magnets$change[1:29]) #5.241379
+mean(magnets$change[30:50]) #1.095238
+
+# think a nicer way to do it would be
+magnets %>%
+    group_by(active) %>%
+    summarize(avg=mean(change))
+
+
 # 4. Compute the sample standard deviation of the variable "change" for the
 #    patients that received an active magnet and the sample standard deviation
 #    for those that received an inactive placebo.
+sd(magnets$change[1:29]) #3.236568
+sd(magnets$change[30:50]) #1.578124
+
+# or
+magnets %>%
+    group_by(active) %>%
+    summarize(stan_dev=sd(change))
+
 # 5. Produce a boxplot of the variable "change" for the patients that received
 #    an active magnet and for patients that received an inactive placebo. What
 #    is the number of outliers in each subsequence?
+magnets %>%
+    ggplot(aes(x=active,y=change, fill=active)) +
+    geom_boxplot() +
+    scale_x_discrete(labels=c("Active Magnet","Placebo")) +
+    labs(x="Treatment Type",y="Change",title="Change in Pain Rating (Before/After Treatment) by Treatment Type")+
+    theme(legend.position="none")
+# looks like no outliers in active, and 3 in inactive, but want to double check
+# number of outliers function
+outliers <- function(col) {
+    q1 <- quantile(col, 0.25)
+    q3 <- quantile(col,0.75)
+    iqr <- IQR(col)
+
+    sum(col < (q1-1.5*iqr) | col > (q3+1.5*iqr))
+}
+
+outliers(magnets$change[1:29]) #0
+outliers(magnets$change[30:50]) #4, not 3
 
 ####################################################################################
 # IST Chapter 10, Exercise 10.1
@@ -33,11 +73,41 @@ magnets <- read_csv("http://pluto.huji.ac.il/~msby/StatThink/Datasets/magnets.cs
 #    of size n = 100 from the Normal(3, 2) distribution. Compute the expectation
 #    and the variance of the sample average and of the sample median. Which of
 #    the two estimators has a smaller mean square error?
-#
+n <- 100
+mu <- 3
+sig <- sqrt(2)
+
+x_bar <-  replicate(100000, mean(rnorm(n,mu,sig)))
+mean(x_bar) 
+var(x_bar) #generally outputs a smaller var than x_med
+mean((mu-x_bar)^2)
+
+x_med <- replicate(100000, median(rnorm(n,mu,sig)))
+mean(x_med)
+var(x_med)
+mean((mu-x_med)^2)
+# variance of x_bar and MSE of x_bar are smaller than those of x_med
+
 # 2. Simulate the sampling distribution of average and the median of a sample
 #    of size n = 100 from the Uniform(0.5, 5.5) distribution. Compute the
 #    expectation and the variance of the sample average and of the sample
 #    median. Which of the two estimators has a smaller mean square error?
+n <- 100
+a <- 0.5
+b <- 5.5
+expectation <- (a+b)/2
+var <- ((b-a)^2)/12
+
+x_bar <- replicate(100000, mean(runif(n,a,b)))
+mean(x_bar)
+var(x_bar)
+mean((mu-x_bar)^2)
+
+x_med <- replicate(100000, median(runif(n,a,b)))
+mean(x_med)
+var(x_med)
+mean((mu-x_med)^2)
+# variance of x_bar and MSE of x_bar are smaller than those of x_med
 
 ####################################################################################
 # IST Chapter 10, Exercise 10.2

@@ -28,7 +28,7 @@ magnets <- read_csv("http://pluto.huji.ac.il/~msby/StatThink/Datasets/magnets.cs
 #   hypothesis should reflect the situation that the placebo effect is absent
 # X = score pain before treatment - score pain after treatment (for inactive placebo, represented by magnets$change[30:50])
 # H_0: E(X) = 0  (basically patients wouldn't report a change in pain score)
-# H_A: E(X) not equal 0 (corresponds to patient reporting more/less pain)
+# H_A: E(X) != 0 (corresponds to patient reporting more/less pain)
 
 # 2. Identify the observations that can be used in order to test the hypotheses.
 # the change in pain scores reported by the control group, magnets$change[30:50]
@@ -41,6 +41,11 @@ t.test(magnets$change[30:50]) #mu already set to zero, already two sided
 
 ####################################################################################
 # IST Chapter 13, Exercise 13.1
+
+# just some interesiting functions from the chapter i wanted to take note of
+# table(magnets$active)
+# tapply(magnets$score1,magnets$active,mean)
+# tapply(magnets$score1,magnets$active,var)
 
 magnets <- read_csv("http://pluto.huji.ac.il/~msby/StatThink/Datasets/magnets.csv")
 #  In this exercise we would like to analyze the results of the
@@ -59,13 +64,27 @@ magnets <- read_csv("http://pluto.huji.ac.il/~msby/StatThink/Datasets/magnets.cs
 # All tests should conducted at the 5% significance level:
 # 1. Is there a significance difference between the treatment and the control
 #    groups in the expectation of the reported score of pain before the application of the device?
-# H_0: 
+# Let X_a be the treatment subgroup and X_b be the control subgroup
+# H_0: E(X_a) = E(X_b)
+# H_A:  E(X_a) != E(X_b)
+t.test(magnets$score1~magnets$active)
+# p-value = 0.6806 -> can't reject the null hypothesis
 
 # 2. Is there a significance difference between the treatment and the control
 #    groups in the variance of the reported score of pain before the application
 #    of the device?
+# H_0: Var(X_a)/Var(X_b) = 1 (variances are equal)
+# H_A: Var(X_a)/Var(X_b) != 1
+var.test(magnets$score1~magnets$active)
+# p-value = 0.3687 -> can't reject the null hypothesis
+
 # 3. Is there a significance difference between the treatment and the control
 #    groups in the expectation of the change in score that resulted from the
 #    application of the device?
+t.test(magnets$change~magnets$active)
+# p-value = 3.86e-07 -> reject the null
+
 # 4. Is there a significance difference between the treatment and the control
 #    groups in the variance of the change in score that resulted from the application of the device?
+var.test(magnets$change~magnets$active)
+#  p-value = 0.001535 -> reject the null

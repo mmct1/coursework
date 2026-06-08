@@ -1,0 +1,56 @@
+---
+title: "3.6.3 - 3.6.6"
+output: html_document
+---
+
+3.6.3 Multiple Linear Regression
+In order to fit a multiple linear regression model using least squares, we
+again use the lm() function. The syntax lm(y ∼ x1 + x2 + x3) is used to
+fit a model with three predictors, x1, x2, and x3. The summary() function
+now outputs the regression coefficients for all the predictors.
+
+```{r}
+library(ISLR2)
+lm.fit <- lm(medv ~ lstat + age, data = Boston)
+summary(lm.fit)
+```
+
+The Boston data set contains 12 variables, and so it would be cumbersome
+to have to type all of these in order to perform a regression using all of the
+predictors. Instead, we can use the following short-hand:
+
+```{r}
+lm.fit <-lm(medv ~ ., data = Boston)
+summary(lm.fit)
+```
+
+We can access the individual components of a summary object by name
+(type ?summary.lm to see what is available). Hence summary(lm.fit)$r.sq
+gives us the R2, and summary(lm.fit)$sigma gives us the RSE. The vif()
+function, part of the car package, can be used to compute variance inflation
+factors. Most VIF’s are low to moderate for this data. The car package is
+not part of the base R installation so it must be downloaded the first time
+you use it via the install.packages() function in R.
+
+```{r}
+library(car)
+vif(lm.fit)
+```
+
+What if we would like to perform a regression using all of the variables but
+one? For example, in the above regression output, age has a high p-value.
+So we may wish to run a regression excluding this predictor. The following
+syntax results in a regression using all predictors except age.
+
+```{r}
+lm.fit1 <-lm(medv ~.- age, data = Boston)
+summary(lm.fit1)
+```
+
+Alternatively, the update() function can be used.
+
+```{r}
+lm.fit1 <-update(lm.fit,~.- age)
+```
+
+reviewed 3.6.4-3.6.6

@@ -6,6 +6,36 @@
 # height          1.0176      0.0440    23.13    0.0000
 body <- read.table("body.dat.txt", header = TRUE)
 
+# key to variables @ bottom of page: https://jse.amstat.org/v11n2/datasets.heinz.html
+# col23 - weight
+# col24 - height
+
+body2 <- body %>%
+    select(23,24) %>%
+    rename("weight"="X65.6", "height"="X174.0")
+    
+body2 %>%
+    ggplot(aes(x=height,y=weight)) + 
+        geom_point()
+        #sanity check, looks like the scatterplot from 5.29
+
+model <- lm(weight~height, body2)
+model
+# output aligns closely with Estimate col in 5.29
+
+coef_table <- summary(model)$coefficients %>% as.data.frame()
+
+coef_table <- coef_table %>%
+    mutate(across(.cols = c("Estimate","Std. Error"), .fns = (\(x)round(x,4))))
+coef_table <- coef_table %>%
+    mutate(across(.cols = "t value", .fns = (\(x)round(x,2))))
+coef_table <- coef_table %>%
+    mutate(across(.cols = "Pr(>|t|)", .fns = (\(x)formatC(x,digits=4,format="f"))))
+coef_table
+#              Estimate Std. Error t value Pr(>|t|)
+# (Intercept) -105.0691     7.5437  -13.93   0.0000
+# height         1.0180     0.0440   23.13   0.0000
+# some of the vals in cols 1 and 2 dont match exactly?
 ###################################################################################
 # ISRS Exercise 6.1
 #  The Child Health and Development Studies investigate a range of

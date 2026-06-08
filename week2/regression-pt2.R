@@ -35,7 +35,7 @@ coef_table
 #              Estimate Std. Error t value Pr(>|t|)
 # (Intercept) -105.0691     7.5437  -13.93   0.0000
 # height         1.0180     0.0440   23.13   0.0000
-# some of the vals in cols 1 and 2 dont match exactly?
+# some of the vals in cols 1 and 2 dont match exactly? but pretty close
 ###################################################################################
 # ISRS Exercise 6.1
 #  The Child Health and Development Studies investigate a range of
@@ -55,10 +55,20 @@ coef_table
 # don’t need to check linearity since the predictor has only two levels.)
 babyweights <- read.table("babyweights.txt", header = TRUE)
 
+# REPRODUCING RESULTS FROM THE BOOK
+model1 <- lm(bwt~smoke,babyweights)
+summary(model1)$coefficients
+
 # a. Write the equation of the regression line.
+# y = -8.94x + 123.05
+
 # b. Interpret the slope in this context, and calculate the predicted birth weight of babies born to
 # smoker and non-smoker mothers.
+# slope: if a mother is a smoker, a baby is anticipated to have a birth weight 8.94 less ounces than
+# those born to non-smokers
+
 # c. Is there a statistically significant relationship between the average birth weight and smoking?
+# yes, the p-value is reported as 0.0000, so less than the typical alpha of 0.05
 
 ###################################################################################
 # ISRS Exercise 6.2
@@ -70,11 +80,23 @@ babyweights <- read.table("babyweights.txt", header = TRUE)
 #               Estimate  Std. Error  t value  Pr(>|t|)
 # (Intercept)    120.07        0.60   199.94    0.0000
 # parity          -1.93        1.19    -1.62    0.1052
-#
+
+# REPRODUCING RESULTS FROM THE BOOK
+model2 <- lm(bwt~parity,babyweights)
+summary(model2)$coefficients
+
 # a. Write the equation of the regression line.
+# y = -1.93x + 120.07
+
 # b. Interpret the slope in this context, and calculate the predicted birth weight of first borns and
 #    others.
+# slope: if a child is not firstborn, their birthweight is expected to be 1.93 less ounces
+# predicted birth weights:
+#       first borns = 120.07 ounces
+#       others = 118.14
+
 # c. Is there a statistically significant relationship between the average birth weight and parity?
+# no, p-value is 0.1052 which is larger than the standard alpha of 0.05
 
 ###################################################################################
 # ISRS Exercise 6.3
@@ -101,12 +123,36 @@ babyweights <- read.table("babyweights.txt", header = TRUE)
 # height           1.15        0.21     5.63    0.0000
 # weight           0.05        0.03     1.99    0.0471
 # smoke           -8.40        0.95    -8.81    0.0000
-#
+
+# REPRODUCING RESULTS FROM THE BOOK
+model3 <- lm(bwt~.,babyweights)
+round(summary(model3)$coefficients,2)
+
 # a. Write the equation of the regression line that includes all variables:
+# y = -80.41 + 0.44(gestation) - 3.33(parity) - 0.01(age) + 1.15(height) + 0.05(weight) - 8.40(smoke)
+
 # b. Interpret the slopes of gestation and age in this context:
+# gestation slope: for every additional day in length of pregnancy, the birth weight is
+# predicted to increase by 0.44 ounces
+# age slope: for each additional year in mothers age, the birth weight is predicted to 
+# decrease by 0.01 ounces
+
 # c. The coefficient for parity is different than in the linear model shown in Exercise 6.2. Why
 #    might there be a difference?
+# there might be a difference because collinearity can lead p-values of a variable to change
+
 # d. Calculate the residual for the first observation in the dataset.
+#         bwt  gestation  parity  age  height  weight  smoke
+#  1      120        284       0   27      62     100      0
+# observed birthweight = 120
+# predicted birthweight = -80.41 + 0.44(284) - 0.01(27) + 1.15(62) + 0.05(100) = 120.58
+# residual = observed - predicted
+# residual = 120 - 120.58 = -0.58
+
 # e. The variance of the residuals is 249.28, and the variance of the birth weights of all babies
 #    in the data set is 332.57. Calculate the R^2 and the adjusted R^2. Note that there are 1,236
 #    bservations in the data set.
+# R^2 = 1 - (variability in residuals/variability in outcome)
+# R^2 = 1 - (249.28/332.57) = 0.2504
+# adjusted R^2 = R^2 * (n-1)/(n-k-1) where n is the num cases used to fit the model and k is num predictors
+# adjusted R^2 = 0.2504 * (1236-1)/(1236-6-1) = 0.2516

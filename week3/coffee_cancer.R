@@ -25,11 +25,10 @@
 
 # H_0: Fewer than 1 in 100,000 extra cases of cancer occur among people assigned to drink coffee
 # H_A: More than 1 in 100,000 extra cases of cancer occur among people assigned to drink coffee
-pwr_result <- power.prop.test(p1=0.40,p2=.40001,sig.level=0.1,power=.8,alternative="one.sided")
+pwr_result <- power.prop.test(p1=0.4,p2=.40001,sig.level=0.1,power=.8,alternative="one.sided")
 pwr_result
 
 # b) Comment on challenges you might face in running this experiment.
-# The sample size returned by the function is n = 21,637,831,282 which is such a large necessary
-# sample size that it is unrealistic/not feasible. So basically because you are trying to detect
+# The sample size returned by the function is n = 21,637,831,282. Since you are trying to detect
 # such a small difference it necessitates an unrealistically large sample size to reach
-# the level detection desired. 
+# the level of detection desired. 

@@ -25,7 +25,7 @@
 
 # H_0: Fewer than 1 in 100,000 extra cases of cancer occur among people assigned to drink coffee
 # H_A: More than 1 in 100,000 extra cases of cancer occur among people assigned to drink coffee
-pwr_result <- power.prop.test(p1=0.4,p2=.40001,sig.level=0.1,power=.8,alternative="one.sided")
+pwr_result <- power.prop.test(p1=0.4,p2=0.40001,sig.level=0.1,power=0.8,alternative="one.sided")
 pwr_result
 
 # b) Comment on challenges you might face in running this experiment.

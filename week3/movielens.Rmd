@@ -52,7 +52,11 @@ ratings %>%
 # group by movie_id, compute mean and # of ratings for each
 agg_ratings <- ratings %>%
   group_by(movie_id) %>%
-  summarize(mean_rating=mean(rating), num_ratings = n())
+  summarize(mean_rating=mean(rating), num_ratings = n()) 
+
+agg_ratings %>% 
+  ggplot(aes(x=mean_rating, y=num_ratings)) +
+  geom_point()
 
 head(agg_ratings) %>% kable()
 ```
@@ -130,12 +134,24 @@ agg_user
 ```{r dist-user-activity}
 # plot distribution of user activity (= number of ratings the user made)
 # hint: try a log scale here
-ratings %>%
-  ggplot(aes(x=user_id)) +
-    geom_histogram() +
+agg_user %>%
+  ggplot(aes(x=user_id, y=num_ratings)) +
+    geom_col() +
+    scale_y_log10(labels=comma)
     labs(title="Number of Ratings by User ID",x="User ID",y="Number of Ratings")
+
 ```
 
+```{r dist-user-activity}
+# ALTERNATIVE
+# PLOT NUMBER OF RATINGS AS THE X AXIS AND NUMBER PPL WHO DID THAT MANY RATINGS ON THE Y
+agg_user %>%
+  ggplot(aes(x=num_ratings)) +
+    geom_histogram() +
+    scale_x_log10(labels=comma) +
+    labs(x="Number of Ratings",y="Number of People",title="How many ratings did people make?")
+
+```
 # Anatomy of the long tail
 
 ```{r long-tail}
@@ -153,4 +169,28 @@ ratings %>%
 # paper, produce one curve for the 100% user satisfaction level and
 # another for 90%---do not, however, bother implementing the null
 # model (shown in the dashed lines).
+
+# looks like the lowesr number of ratings is 20 in thus dataset anyways
+# vertical axis CDF
+# inventory size x axis
+# 100% satisfaction line - the percentage of people that will be 100%
+# satisfied given that size inventory
+# 90% line - the percentage of people that will be 90% satisfied given that inventory
+
+movies <- read_tsv('movies.tsv',
+                    col_names = c('movie_id','movie_name','genre'))
+nrow(movies) # 10681
+# percent of people whose highest movie id is <= inventory size, so then that # divided
+# by number of unique users, really only need peoples highest id
+
+max_movie <- ratings %>%
+  group_by(user_id) %>%
+  slice_max(order=movie_id,n=1) %>%
+  rename(max_id=movie_id)
+
+total_people <- nrow(max_movie)
+# possible inventories
+movies %>%
+  mutate("100p"=cumsum(sum(max_movie$max_id <= movie_id))/total_people) %>%
+  tail()
 ```

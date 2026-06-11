@@ -4,4 +4,9 @@
 
 # update the timestamp on the resulting file using touch
 # do not remove, this will keep make happy and avoid re-downloading of the data once you have it
+
+url=http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-1gram-20120701-1.gz
+
+[ -f googlebooks-eng-all-1gram-20120701-1.gz ] || curl -L -o googlebooks-eng-all-1gram-20120701-1.gz $url
+
 touch googlebooks-eng-all-1gram-20120701-1.gz

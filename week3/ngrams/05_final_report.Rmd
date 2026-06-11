@@ -52,33 +52,52 @@ Then edit the `03_download_totals.sh` file to down the `googlebooks-eng-all-tota
 Load in the `year_counts.tsv` and `total_counts.csv` files. Use the `here()` function around the filename to keep things portable.Give the columns of `year_counts.tsv` the names `term`, `year`, `volume`, and `book_count`. Give the columns of `total_counts.csv` the names `year`, `total_volume`, `page_count`, and `book_count`. Note that column order in these files may not match the examples in the documentation.
 
 ```{r load-counts}
-
-
+year_counts <- read_tsv(here("./week3/ngrams/year_counts.tsv"), col_names=c("term", "year", "volume", "book_count"))
+total_counts <- read_csv(here("./week3/ngrams/total_counts.csv"), col_names=c("year", "total_volume", "page_count", "book_count"))
 ```
 
 ## Your written answer
 
 Add a line below using Rmarkdown's inline syntax to print the total number of lines in each dataframe you've created.
+`r nrow(year_counts)`
+`r nrow(total_counts)`
 
 # Part B
 
-> Recreate the main part of figure 3a of Michel et al. (2011). To recreate this figure, you will need two files: the one you downloaded in part (a) and the “total counts” file, which you can use to convert the raw counts into proportions. Note that the total counts file has a structure that may make it a bit hard to read in. Does version 2 of the NGram data produce similar results to those presented in Michel et al. (2011), which are based on version 1 data?
+> Recreate the main part of figure 3a of Michel et al. (2011). To recreate this figure, you will need two files: 
+> the one you downloaded in part (a) and the “total counts” file, which you can use to convert the raw counts 
+> into proportions. Note that the total counts file has a structure that may make it a bit hard to read in. 
+> Does version 2 of the NGram data produce similar results to those presented in Michel et al. (2011), which are 
+> based on version 1 data?
 
 ## Join ngram year counts and totals
 
-Join the raw year term counts with the total counts and divide to get a proportion of mentions for each term normalized by the total counts for each year.
+Join the raw year term counts with the total counts and divide to get a proportion of mentions for each term normalized 
+by the total counts for each year.
 
 ```{r join-years-and-totals}
+proportion_counts <- left_join(year_counts, select(total_counts, total_volume, year), by="year") %>%
+  mutate(proportion=volume/total_volume)
 
-
+proportion_counts
 ```
 
 ## Plot the main figure 3a
 
-Plot the proportion of mentions for the terms "1883", "1910", and "1950" over time from 1850 to 2012, as in the main figure 3a of the original paper. Use the `percent` function from the `scales` package for a readable y axis. Each term should have a different color, it's nice if these match the original paper but not strictly necessary.
+Plot the proportion of mentions for the terms "1883", "1910", and "1950" over time from 1850 to 2012, as in the main 
+figure 3a of the original paper. Use the `percent` function from the `scales` package for a readable y axis. Each 
+term should have a different color, it's nice if these match the original paper but not strictly necessary.
 
 ```{r plot-proportion-over-time}
+proportion_df <- proportion_counts %>% 
+  filter(year>=1850 & year<=2012) %>%
+  filter(grepl('1883|1910|1950',term)) %>%
+  mutate(term = as.character(term))
 
+proportion_df %>%
+  ggplot(aes(x=year,y=proportion, group=term, color=term)) +
+    geom_line() +
+    scale_y_continuous(labels=percent)
 ```
 
 ## Your written answer

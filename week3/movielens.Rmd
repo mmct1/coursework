@@ -54,10 +54,6 @@ agg_ratings <- ratings %>%
   group_by(movie_id) %>%
   summarize(mean_rating=mean(rating), num_ratings = n()) 
 
-agg_ratings %>% 
-  ggplot(aes(x=mean_rating, y=num_ratings)) +
-  geom_point()
-
 head(agg_ratings) %>% kable()
 ```
 
@@ -137,7 +133,7 @@ agg_user
 agg_user %>%
   ggplot(aes(x=user_id, y=num_ratings)) +
     geom_col() +
-    scale_y_log10(labels=comma)
+    scale_y_log10(labels=comma) +
     labs(title="Number of Ratings by User ID",x="User ID",y="Number of Ratings")
 
 ```
@@ -170,27 +166,29 @@ agg_user %>%
 # another for 90%---do not, however, bother implementing the null
 # model (shown in the dashed lines).
 
-# looks like the lowesr number of ratings is 20 in thus dataset anyways
-# vertical axis CDF
-# inventory size x axis
-# 100% satisfaction line - the percentage of people that will be 100%
-# satisfied given that size inventory
-# 90% line - the percentage of people that will be 90% satisfied given that inventory
+# min(agg_user$num_ratings)
+# 20
+# looks like the users have all rated at least 10 movies 
+long_tail <- left_join(ratings,select(cumulative_pop, movie_id, rank))
 
-movies <- read_tsv('movies.tsv',
-                    col_names = c('movie_id','movie_name','genre'))
-nrow(movies) # 10681
-# percent of people whose highest movie id is <= inventory size, so then that # divided
-# by number of unique users, really only need peoples highest id
-
-max_movie <- ratings %>%
+satisfaction_100 <- long_tail %>%
   group_by(user_id) %>%
-  slice_max(order=movie_id,n=1) %>%
-  rename(max_id=movie_id)
+  summarize(max_rank=max(rank)) %>%
+  arrange(max_rank) %>%
+  group_by(max_rank) %>%
+  summarize(satisfied=n()) %>%
+  mutate(percent_satisfied=cumsum(satisfied)/sum(satisfied))
 
-total_people <- nrow(max_movie)
-# possible inventories
-movies %>%
-  mutate("100p"=cumsum(sum(max_movie$max_id <= movie_id))/total_people) %>%
-  tail()
+satisfaction_90 <- long_tail %>%
+  group_by(user_id) %>%
+  summarize(max_rank=quantile(rank,probs=0.90)) %>% # max rank needed to be 90% satisfied
+  arrange(max_rank) %>%
+  group_by(max_rank) %>%
+  summarize(satisfied=n()) %>%
+  mutate(percent_satisfied=cumsum(satisfied)/sum(satisfied))
+
+ggplot() +
+  geom_line(aes(x=max_rank,y=percent_satisfied),satisfaction_100) +
+  geom_line(aes(x=max_rank,y=percent_satisfied),satisfaction_90) +
+  labs(title="User Satisfaction by Inventory Size", x="Inventory Size",y="Percent of Users Satisfied")
 ```

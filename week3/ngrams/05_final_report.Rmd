@@ -102,7 +102,9 @@ proportion_df %>%
 
 ## Your written answer
 
-Write up your answer to Part B here.
+It does produce similar results to those based on version 1 of the data, the frequencies follow a similar pattern
+visually. However, the actual percentages do vary between this version and the older version. 
+
 
 # Part C
 
@@ -115,6 +117,9 @@ Go to the ngram viewer, enter the terms "1883", "1910", and "1950" and take a sc
 ## Your written answer
 
 Add your screenshot for Part C below this line using the `![](figure_filename.png)` syntax and comment on similarities / differences.
+![](ngrams.png)
+Follows a similar trend, with 1883 having the lowest peak and 1950 having the highest. The actual % values are different though.
+Moreover, my figure shows the differences in % to be more dramatic than the NGram Viewer does. 
 
 
 # Part D
@@ -123,10 +128,15 @@ Add your screenshot for Part C below this line using the `![](figure_filename.pn
 
 ## Plot the main figure 3a with raw counts
 
-Plot the raw counts for the terms "1883", "1910", and "1950" over time from 1850 to 2012. Use the `comma` function from the `scales` package for a readable y axis. The colors for each term should match your last plot, and it's nice if these match the original paper but not strictly necessary.
+Plot the raw counts for the terms "1883", "1910", and "1950" over time from 1850 to 2012. Use the `comma` function 
+from the `scales` package for a readable y axis. The colors for each term should match your last plot, and it's nice 
+if these match the original paper but not strictly necessary.
 
 ```{r plot-raw-mentions-over-time}
-
+proportion_df %>%
+  ggplot(aes(x=year,y=volume, group=term, color=term)) +
+    geom_line() +
+    scale_y_continuous(labels=comma)
 ```
 
 # Part E
@@ -137,57 +147,102 @@ As part of answering this question, make an additional plot.
 
 ## Plot the totals
 
-Plot the total counts for each year over time, from 1850 to 2012. Use the `comma` function from the `scales` package for a readable y axis. There should be only one line on this plot (not three).
+Plot the total counts for each year over time, from 1850 to 2012. Use the `comma` function from the `scales` package for a 
+readable y axis. There should be only one line on this plot (not three).
 
 ```{r plot-totals}
-
+proportion_counts %>% 
+  filter(year>=1850 & year<=2012) %>%
+  ggplot(aes(x=year,y=total_volume)) +
+    geom_line() +
+    scale_y_continuous(labels=comma)
 ```
 
 ## Your written answer
 
-Write up your answer to Part E here.
+Because we are writing about things more in general, the trend in B actually shows the line in terms of counts going up
+So while you could say that the years aren't getting mentioned as much in terms of comparison to the rest of the corpus,
+the sheer volume of things (that has continued to increase) would be a reason for that. But the actual count of mentions 
+doesn't seem to be disappearing in the same way.
 
 # Part F
 
-> Now, using the proportion of mentions, replicate the inset of figure 3a. That is, for each year between 1875 and 1975, calculate the half-life of that year. The half-life is defined to be the number of years that pass before the proportion of mentions reaches half its peak value. Note that Michel et al. (2011) do something more complicated to estimate the half-life—see section III.6 of the Supporting Online Information—but they claim that both approaches produce similar results. Does version 2 of the NGram data produce similar results to those presented in Michel et al. (2011), which are based on version 1 data? (Hint: Don’t be surprised if it doesn’t.)
+> Now, using the proportion of mentions, replicate the inset of figure 3a. That is, for each year between 1875 and 1975, 
+> calculate the half-life of that year. The half-life is defined to be the number of years that pass before the proportion 
+> of mentions reaches half its peak value. Note that Michel et al. (2011) do something more complicated to estimate the 
+> half-life—see section III.6 of the Supporting Online Information—but they claim that both approaches produce similar 
+> results. Does version 2 of the NGram data produce similar results to those presented in Michel et al. (2011), which 
+> are based on version 1 data? (Hint: Don’t be surprised if it doesn’t.)
 
 ## Compute peak mentions
 
-For each year term, find the year where its proportion of mentions peaks (hits its highest value). Store this in an intermediate dataframe.
+For each year term, find the year where its proportion of mentions peaks (hits its highest value). Store this in an 
+intermediate dataframe.
 
 ```{r compute-peaks}
-
+peak_df <- proportion_counts %>%
+  filter(year >= 1875 & year <= 1975) %>%
+  group_by(term) %>%
+  slice_max(proportion)
 ```
 
 ## Compute half-lifes
 
-Now, for each year term, find the minimum number of years it takes for the proportion of mentions to decline from its peak value to half its peak value. Store this in an intermediate data frame.
+Now, for each year term, find the minimum number of years it takes for the proportion of mentions to decline from its peak 
+value to half its peak value. Store this in an intermediate data frame.
 
 ```{r compute-half-lifes}
-
+halflife_df <- left_join(proportion_counts,select(peak_df,term,year,proportion),by="term") %>%
+  filter(year.x >= year.y) %>%
+  filter(proportion.x <= proportion.y/2) %>%
+  group_by(term) %>%
+  slice_min(year.x) %>%
+  rename(halflife_year=year.x,halflife_prop=proportion.x,peak_year=year.y,peak_prop=proportion.y) %>%
+  select(term,halflife_year,halflife_prop,peak_year,peak_prop) %>%
+  mutate(years_btwn=halflife_year-peak_year)
 ```
 
 ## Plot the inset of figure 3a
 
-Plot the half-life of each term over time from 1850 to 2012. Each point should represent one year term, and add a line to show the trend using `geom_smooth()`.
+Plot the half-life of each term over time from 1850 to 2012. Each point should represent one year term, and add 
+a line to show the trend using `geom_smooth()`.
 
 
 ```{r plot-half-lifes}
-
+halflife_df %>%
+  filter(term >= 1850 & term <= 2012) %>%
+  ggplot(aes(x=term,y=years_btwn)) +
+    geom_point() +
+    geom_smooth() +
+    labs(x="Year",y="Half-life (yrs)")
 ```
 
 ## Your written answer
 
-Write up your answer to Part F here.
+There seems to be a lot more outliers in the plot I created compared to the one from the paper, and the outliers have
+a lot larger values. The trend lines are also different from one another, but do show one similarity in first displaying
+a quicker decline, and then a less rapid decline as years increase.
 
 # Part G
 
-> Were there any years that were outliers such as years that were forgotten particularly quickly or particularly slowly? Briefly speculate about possible reasons for that pattern and explain how you identified the outliers.
+> Were there any years that were outliers such as years that were forgotten particularly quickly or particularly slowly? 
+> Briefly speculate about possible reasons for that pattern and explain how you identified the outliers.
 
 ## Your written answer
 
 Write up your answer to Part G here. Include code that shows the years with the smallest and largest half-lifes.
-
+```{r}
+halflife_df %>%
+  filter(term >= 1850 & term <= 2012) %>%
+  arrange(years_btwn)
+```
+```{r}
+halflife_df %>%
+  filter(term >= 1850 & term <= 2012) %>%
+  arrange(desc(years_btwn))
+```
 # Makefile
 
-Edit the `Makefile` in this directory to execute the full set of scripts that download the data, clean it, and produce this report. This must be turned in with your assignment such that running `make` on the command line produces the final report as a pdf file.
+Edit the `Makefile` in this directory to execute the full set of scripts that download the data, clean it, and produce 
+this report. This must be turned in with your assignment such that running `make` on the command line produces the final 
+report as a pdf file.

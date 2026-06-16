@@ -1,6 +1,6 @@
 ---
 title: "Predicting Daily Citibike Trips"
-author: "Your Name"
+author: "mary mctarsney"
 date: "`r Sys.Date()`"
 output: html_document
 ---
@@ -22,31 +22,35 @@ Hold out 10% of the data as a final test set. Use the remaining 90% for
 training and validation.
 
 ```{r}
-set.seed(42)
+  set.seed(42)
+  num_days <- nrow(trips_per_day)
+  frac_tv <- 0.9
+  num_tv <- floor(num_days * frac_tv)
 
-num_days <- nrow(trips_per_day)
-frac_tv <- 0.9
-num_tv <- floor(num_days * frac_tv)
+  # randomly sample rows for the training/validation set 
+  ndx <- sample(1:num_days, num_tv, replace=F)
 
-# randomly sample rows for the training/validation set 
-ndx <- sample(1:num_days, num_tv, replace=F)
+  trips_per_day_tv <- trips_per_day[ndx, ]
 
-trips_per_day_tv <- trips_per_day[ndx, ]
+  # used for testing
+  trips_per_day_test <- trips_per_day[-ndx, ]
 
-# used for testing
-trips_per_day_test <- trips_per_day[-ndx, ]
+  # now test data is set aside ->
+  # from training/validation data, split 90% for training, 10% from validation
+  num_days <- nrow(trips_per_day_tv)
+  frac_train <- 0.9
+  num_train <- floor(num_days * frac_train)
 
-num_days <- nrow(trips_per_day_tv)
-frac_tv <- 0.9
-num_tv <- floor(num_days * frac_tv)
+  # randomly sample rows for the training set 
+  ndx <- sample(1:num_days, num_train, replace=F)
 
-# randomly sample rows for the training/validation set 
-ndx <- sample(1:num_days, num_tv, replace=F)
+  #used for training
+  trips_per_day_train <- trips_per_day_tv[ndx, ]
 
-trips_per_day_train <- trips_per_day_tv[ndx, ]
+  # used for validation
+  trips_per_day_validate <- trips_per_day_tv[-ndx, ] 
 
-# used for testing
-trips_per_day_validate <- trips_per_day_tv[-ndx, ]  
+  # have trips_per_day_train, trips_per_day_validate, and trips_per_day_test
 ```
 
 ## Baseline model: temperature only
@@ -71,7 +75,6 @@ for (k in K) {
     validate_err[k] <- sqrt(mean((predict(model, trips_per_day_validate) - trips_per_day_validate$num_trips)^2))
 }
 
-
 plot_data <- data.frame(K, train_err, validate_err) %>%
   gather("split", "error", -K)
 
@@ -88,30 +91,39 @@ Add features that might help: day of week, month, precipitation, etc.
 Remember: only use information available *before* the day in question.
 
 ```{r}
-K <- 1:8
-train_err <- c()
-validate_err <- c()
-for (k in K) {
-  
-    # fit on the training data
-    model <- lm(num_trips ~ I(tmin*tmax^4) + prcp + snow + tmin*snow + prcp*snow, data=trips_per_day_train)
-    
-    # evaluate on the training data
-    train_err[k] <- sqrt(mean((predict(model, trips_per_day_train) - trips_per_day_train$num_trips)^2))
+trips_per_day <- trips_per_day %>%
+  mutate(is_weekend = wday(ymd) %in% c(1,7), temp_difference=tmax-tmin, month=month(ymd), day_of_week=day(ymd))
 
-    # evaluate on the validate data
-    validate_err[k] <- sqrt(mean((predict(model, trips_per_day_validate) - trips_per_day_validate$num_trips)^2))
-}
+# splitting data again with new features
+  set.seed(50)
+  num_days <- nrow(trips_per_day)
+  frac_tv <- 0.9
+  num_tv <- floor(num_days * frac_tv)
 
+  # randomly sample rows for the training/validation set 
+  ndx <- sample(1:num_days, num_tv, replace=F)
 
-plot_data <- data.frame(K, train_err, validate_err) %>%
-  gather("split", "error", -K)
+  trips_per_day_tv <- trips_per_day[ndx, ]
 
-ggplot(plot_data, aes(x=K, y=error, color=split)) +
-  geom_line() +
-  scale_x_continuous(breaks=K) +
-  xlab('Polynomial Degree') +
-  ylab('RMSE')
+  # used for testing
+  trips_per_day_test <- trips_per_day[-ndx, ]
+
+  # now test data is set aside ->
+  # from training/validation data, split 90% for training, 10% from validation
+  num_days <- nrow(trips_per_day_tv)
+  frac_train <- 0.9
+  num_train <- floor(num_days * frac_train)
+
+  # randomly sample rows for the training set 
+  ndx <- sample(1:num_days, num_train, replace=F)
+
+  #used for training
+  trips_per_day_train <- trips_per_day_tv[ndx, ]
+
+  # used for validation
+  trips_per_day_validate <- trips_per_day_tv[-ndx, ] 
+
+  # have trips_per_day_train, trips_per_day_validate, and trips_per_day_test
 ```
 
 ## Model comparison
@@ -119,21 +131,77 @@ ggplot(plot_data, aes(x=K, y=error, color=split)) +
 Try different models and compare their validation performance.
 
 ```{r}
+model1 <- lm(num_trips ~ I(tmin^4) + I(tmax^4) + prcp + snwd*snow + is_weekend + month + day_of_week, data = trips_per_day_train)
 
+model2 <- lm(num_trips ~ I(tmin^4)*I(tmax^4) + prcp*snow + month + day_of_week*is_weekend, data=trips_per_day_train)
+
+model3 <- lm(num_trips ~ I(tmin^4)*I(tmax^3) + prcp*tmin + snow*tmin + month + day_of_week*is_weekend, data=trips_per_day_train)
+
+model4 <- lm(num_trips ~ I(tmin^4)*I(tmax^4) + prcp*tmin + snow*tmin + month*day_of_week + day_of_week*is_weekend, data=trips_per_day_train)
+
+model5 <- lm(num_trips ~ I(tmin^4)*I(tmax^4) + prcp*tmin + snow*tmin + month*is_weekend, data=trips_per_day_train)
+
+models <- list(model1, model2, model3, model4, model5)
+for (model in models){
+  pred <- trips_per_day_validate %>%
+    add_predictions(model)
+  
+  pred %>%
+   summarize(rmse = sqrt(mean((pred - num_trips)^2)),
+            cor = cor(pred, num_trips),
+            cor_sq = cor^2) %>%
+    print
+}
+
+# MODEL1
+# rmse   cor cor_sq
+# 5518. 0.848  0.718
+
+# MODEL2
+#   rmse   cor cor_sq
+# 5645. 0.851  0.725
+
+# MODEL3
+#   rmse   cor cor_sq
+# 4860. 0.881  0.776
+
+# MODEL4
+#   rmse   cor cor_sq
+# 4800. 0.880  0.774
+
+# MODEL5
+#   rmse   cor cor_sq
+# 4736. 0.886  0.785
 ```
+
 
 ## Final model
 
 Pick your best model and plot the results.
 
 ```{r}
+# model5 performed the best 
+final_model <- model5
 
+pred <- trips_per_day_validate %>%
+    add_predictions(final_model)
+
+pred %>%
+  ggplot(aes(x=ymd)) +
+    geom_line(aes(y=pred)) +
+    geom_point(aes(y=num_trips))
+```
+
+```{r}
+pred2 %>%
+  ggplot(aes(x=pred,y=num_trips))+
+    geom_point()
 ```
 
 ## Save model
 
 ```{r}
-
+save(final_model, file="citibike_model.RData")
 ```
 
 ## Test set evaluation

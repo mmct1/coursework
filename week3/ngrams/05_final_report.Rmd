@@ -1,6 +1,6 @@
 ---
 title: "MSD Homework 2, Problem 3"
-author: "Your Name (your uni)"
+author: "mary mctarsney (brooklyn college)"
 date: '`r Sys.time()`'
 output:
   html_document:
@@ -52,15 +52,20 @@ Then edit the `03_download_totals.sh` file to down the `googlebooks-eng-all-tota
 Load in the `year_counts.tsv` and `total_counts.csv` files. Use the `here()` function around the filename to keep things portable.Give the columns of `year_counts.tsv` the names `term`, `year`, `volume`, and `book_count`. Give the columns of `total_counts.csv` the names `year`, `total_volume`, `page_count`, and `book_count`. Note that column order in these files may not match the examples in the documentation.
 
 ```{r load-counts}
-year_counts <- read_tsv(here("./week3/ngrams/year_counts.tsv"), col_names=c("term", "year", "volume", "book_count"))
-total_counts <- read_csv(here("./week3/ngrams/total_counts.csv"), col_names=c("year", "total_volume", "page_count", "book_count"))
+year_counts <- read_tsv(
+  here("week3/ngrams","year_counts.tsv"), 
+  col_names=c("term", "year", "volume", "book_count"))
+
+total_counts <- read_csv(
+  here("week3/ngrams","total_counts.csv"), 
+  col_names=c("year", "total_volume", "page_count", "book_count"))
 ```
 
 ## Your written answer
 
 Add a line below using Rmarkdown's inline syntax to print the total number of lines in each dataframe you've created.
-`r nrow(year_counts)`
-`r nrow(total_counts)`
+
+There are `r nrow(year_counts)` rows in year_counts & `r nrow(total_counts)` in total_counts.
 
 # Part B
 
@@ -97,7 +102,8 @@ proportion_df <- proportion_counts %>%
 proportion_df %>%
   ggplot(aes(x=year,y=proportion, group=term, color=term)) +
     geom_line() +
-    scale_y_continuous(labels=percent)
+    scale_y_continuous(labels=percent) +
+    labs(x="Year",y="Frequency")
 ```
 
 ## Your written answer
@@ -133,10 +139,11 @@ from the `scales` package for a readable y axis. The colors for each term should
 if these match the original paper but not strictly necessary.
 
 ```{r plot-raw-mentions-over-time}
-proportion_df %>%
+proportion_df %>% #already filtered for terms & years
   ggplot(aes(x=year,y=volume, group=term, color=term)) +
     geom_line() +
-    scale_y_continuous(labels=comma)
+    scale_y_continuous(labels=comma) +
+    labs(x="Year",y="Raw Mentions")
 ```
 
 # Part E
@@ -155,15 +162,17 @@ proportion_counts %>%
   filter(year>=1850 & year<=2012) %>%
   ggplot(aes(x=year,y=total_volume)) +
     geom_line() +
-    scale_y_continuous(labels=comma)
+    scale_y_continuous(labels=comma) +
+    labs(x="Year",y="Total Counts")
 ```
 
 ## Your written answer
 
-Because we are writing about things more in general, the trend in B actually shows the line in terms of counts going up
-So while you could say that the years aren't getting mentioned as much in terms of comparison to the rest of the corpus,
-the sheer volume of things (that has continued to increase) would be a reason for that. But the actual count of mentions 
-doesn't seem to be disappearing in the same way.
+The paper suggets that we are forgetting things quicker, but looking at this visual makes you consider the fact 
+that the volume of ngrams in the corpus has largely increased over time. Thus, ngrams will count as a lower proportion
+of the total volume. So while you could say that the years aren't getting mentioned as much in terms of comparison to the 
+rest of the corpus, the increasing volume would be a reason for that. But the actual count of mentions doesn't seem to 
+be disappearing in the same way.
 
 # Part F
 
@@ -186,13 +195,16 @@ peak_df <- proportion_counts %>%
   slice_max(proportion)
 ```
 
+
 ## Compute half-lifes
 
 Now, for each year term, find the minimum number of years it takes for the proportion of mentions to decline from its peak 
 value to half its peak value. Store this in an intermediate data frame.
 
 ```{r compute-half-lifes}
-halflife_df <- left_join(proportion_counts,select(peak_df,term,year,proportion),by="term") %>%
+halflife_df <- proportion_counts %>%
+  filter(term >= 1875, term <= 1975, year >= 1850, year <= 2012) %>%
+  left_join(select(peak_df,term,year,proportion),by="term") %>%
   filter(year.x >= year.y) %>%
   filter(proportion.x <= proportion.y/2) %>%
   group_by(term) %>%
@@ -210,7 +222,6 @@ a line to show the trend using `geom_smooth()`.
 
 ```{r plot-half-lifes}
 halflife_df %>%
-  filter(term >= 1850 & term <= 2012) %>%
   ggplot(aes(x=term,y=years_btwn)) +
     geom_point() +
     geom_smooth() +
@@ -219,9 +230,9 @@ halflife_df %>%
 
 ## Your written answer
 
-There seems to be a lot more outliers in the plot I created compared to the one from the paper, and the outliers have
-a lot larger values. The trend lines are also different from one another, but do show one similarity in first displaying
-a quicker decline, and then a less rapid decline as years increase.
+This graph does not produce similar results to those presented in the paper. While the paper shows a somewhat steady
+decline in half-life over time, this data shows (mostly) an upward trend with a little variation. This could indicate
+differences between versions 1 and 2 of the data, or the methods used to produce the half-life plot.
 
 # Part G
 
@@ -233,14 +244,24 @@ a quicker decline, and then a less rapid decline as years increase.
 Write up your answer to Part G here. Include code that shows the years with the smallest and largest half-lifes.
 ```{r}
 halflife_df %>%
-  filter(term >= 1850 & term <= 2012) %>%
   arrange(years_btwn)
 ```
 ```{r}
 halflife_df %>%
-  filter(term >= 1850 & term <= 2012) %>%
   arrange(desc(years_btwn))
 ```
+
+The years with the shortest halflifes were 1877, 1878, and 1942. I was surprised at 1942 since it is during WWII, but
+potentially theres a case where it isn't directly mentioned but instead mentioned as part of the range of years of
+WWII. Unsure about 1877 & 1878 having short half lifes, potentially less influential events occuring?
+
+The years with the longest halflifes were 1975, 1900, 1910. Assuming 1900/1910 are relevant as the turn of the century
+& pre WWI era. 1975 is post Watergate/Nixon resignation, wondering if that has something to do with the longevity of
+its half-life. 
+
+On the surface, I would assume that halflifes have to do with historic/cultural events, but I think theres more nuance
+to it based on the years showing up with the shortest/longest halflifes. 
+
 # Makefile
 
 Edit the `Makefile` in this directory to execute the full set of scripts that download the data, clean it, and produce 

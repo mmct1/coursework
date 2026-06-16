@@ -13,7 +13,7 @@ library(modelr)
 ## Load data
 
 ```{r}
-
+trips_per_day <- read_tsv("trips_per_day.tsv")
 ```
 
 ## Train/test split
@@ -22,7 +22,31 @@ Hold out 10% of the data as a final test set. Use the remaining 90% for
 training and validation.
 
 ```{r}
+set.seed(42)
 
+num_days <- nrow(trips_per_day)
+frac_tv <- 0.9
+num_tv <- floor(num_days * frac_tv)
+
+# randomly sample rows for the training/validation set 
+ndx <- sample(1:num_days, num_tv, replace=F)
+
+trips_per_day_tv <- trips_per_day[ndx, ]
+
+# used for testing
+trips_per_day_test <- trips_per_day[-ndx, ]
+
+num_days <- nrow(trips_per_day_tv)
+frac_tv <- 0.9
+num_tv <- floor(num_days * frac_tv)
+
+# randomly sample rows for the training/validation set 
+ndx <- sample(1:num_days, num_tv, replace=F)
+
+trips_per_day_train <- trips_per_day_tv[ndx, ]
+
+# used for testing
+trips_per_day_validate <- trips_per_day_tv[-ndx, ]  
 ```
 
 ## Baseline model: temperature only
@@ -32,6 +56,30 @@ Start with the polynomial model from the complexity control notebook.
 ```{r}
 # TODO: fit a linear model using poly(tmin, degree) on training data
 # TODO: try different polynomial degrees and evaluate RMSE on validation data
+K <- 1:8
+train_err <- c()
+validate_err <- c()
+for (k in K) {
+  
+    # fit on the training data
+    model <- lm(num_trips ~ poly(tmin, k, raw = T), data=trips_per_day_train)
+    
+    # evaluate on the training data
+    train_err[k] <- sqrt(mean((predict(model, trips_per_day_train) - trips_per_day_train$num_trips)^2))
+
+    # evaluate on the validate data
+    validate_err[k] <- sqrt(mean((predict(model, trips_per_day_validate) - trips_per_day_validate$num_trips)^2))
+}
+
+
+plot_data <- data.frame(K, train_err, validate_err) %>%
+  gather("split", "error", -K)
+
+ggplot(plot_data, aes(x=K, y=error, color=split)) +
+  geom_line() +
+  scale_x_continuous(breaks=K) +
+  xlab('Polynomial Degree') +
+  ylab('RMSE')
 ```
 
 ## Feature engineering
@@ -40,7 +88,30 @@ Add features that might help: day of week, month, precipitation, etc.
 Remember: only use information available *before* the day in question.
 
 ```{r}
+K <- 1:8
+train_err <- c()
+validate_err <- c()
+for (k in K) {
+  
+    # fit on the training data
+    model <- lm(num_trips ~ I(tmin*tmax^4) + prcp + snow + tmin*snow + prcp*snow, data=trips_per_day_train)
+    
+    # evaluate on the training data
+    train_err[k] <- sqrt(mean((predict(model, trips_per_day_train) - trips_per_day_train$num_trips)^2))
 
+    # evaluate on the validate data
+    validate_err[k] <- sqrt(mean((predict(model, trips_per_day_validate) - trips_per_day_validate$num_trips)^2))
+}
+
+
+plot_data <- data.frame(K, train_err, validate_err) %>%
+  gather("split", "error", -K)
+
+ggplot(plot_data, aes(x=K, y=error, color=split)) +
+  geom_line() +
+  scale_x_continuous(breaks=K) +
+  xlab('Polynomial Degree') +
+  ylab('RMSE')
 ```
 
 ## Model comparison

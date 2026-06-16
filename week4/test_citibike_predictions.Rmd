@@ -1,0 +1,72 @@
+---
+title: "Testing Citibike Predictions"
+author: "mary mctarsney"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r setup, message=FALSE}
+library(here)
+library(scales)
+library(modelr)
+library(tidyverse)
+```
+
+
+```{r}
+trips_2015 <- read_tsv("trips_per_day_2015.tsv")
+weather_2015 <- read_csv("weather_2015.csv")
+load(here("week3","citibike_model.RData"))
+```
+
+Check that model is loaded
+```{r}
+final_model
+```
+
+Combine trip and weather data
+```{r}
+weather_2015 <- weather_2015 %>%
+    rename(ymd=DATE, prcp=PRCP, snow=SNOW, snwd=SNWD, tmax=TMAX, tmin=TMIN)
+
+trips_weather <- trips_2015 %>%
+    left_join(select(weather_2015, ymd, prcp, snow, snwd, tmax, tmin), by="ymd") %>%  
+    # not sure if i am missing something, but the temps in this dataset seem to be in 
+    # a different unit than the other, so I adjusted it here but not sure if that
+    # is a valid workaround
+    mutate(tmax=tmax/10, 
+        tmin=tmin/10, 
+        is_weekend = wday(ymd) %in% c(1,7), 
+        temp_difference=tmax-tmin, 
+        month=month(ymd), 
+        day_of_week=day(ymd))
+
+trips_weather
+# col names now match dataset we worked with last week
+```
+
+Plotting results of prediction vs. actual
+```{r}
+pred <- trips_weather %>%
+    add_predictions(final_model)
+
+pred %>%
+  ggplot(aes(x=ymd)) +
+    geom_line(aes(y=pred)) +
+    geom_point(aes(y=num_trips))
+```
+```{r}
+pred %>%
+  ggplot(aes(x=pred,y=num_trips))+
+    geom_point()
+```
+
+RMSE using 2015 data
+```{r}
+# for reference 2014 test data was as follows
+# rmse 3381.09, rsquare 0.844865
+
+rmse(final_model, trips_weather)
+rsquare(final_model, trips_weather)
+# rmse 8602.66, rsquare 0.69828
+```
+The model performed noticably worse on the 2015 data compared to the 2014 data, but not terrible overall. 

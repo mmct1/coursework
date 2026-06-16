@@ -193,7 +193,7 @@ pred %>%
 ```
 
 ```{r}
-pred2 %>%
+pred %>%
   ggplot(aes(x=pred,y=num_trips))+
     geom_point()
 ```
@@ -212,4 +212,12 @@ save(final_model, file="citibike_model.RData")
 # TODO: load your saved model and predict on trips_test
 # TODO: compute RMSE on test set
 # TODO: how do you think this model will perform on future data?
+load("citibike_model.RData")
+
+rmse(final_model, trips_per_day_test)
+# 3381.09
+rsquare(final_model, trips_per_day_test)
+# 0.844865
 ```
+I think these scores indicate that this model could perform reasonably well on future data, however I do think
+the performance on future data wouldn't be as good (especially based on the chart demonstrating the fit of the model).
